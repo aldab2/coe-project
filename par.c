@@ -20,7 +20,9 @@ void save_to_file(double (*x)[N], char filename[]);
 int main(int argc, char *argv[])
 {
     double(*x) = malloc(sizeof(double[N])), (*a)[N] = malloc(sizeof(double[N][N]));
-    double(*err) = malloc(sizeof(double[N])), (*c) = malloc(sizeof(double[N])), (*p) = malloc(sizeof(double[N]));
+    double(*err) = malloc(sizeof(double[N]))
+    // , (*c) = malloc(sizeof(double[N]))
+    , (*p) = malloc(sizeof(double[N]));
     double(*b) = malloc(sizeof(double[N]));
     int i, j, k, iter;
     double dtime;
@@ -32,7 +34,7 @@ int main(int argc, char *argv[])
 
             x[i] = 0;
             p[i] = 0;
-            c[i] = 0;
+            // c[i] = 0;
             err[i] = 0;
         }
     // init a
@@ -134,8 +136,7 @@ int main(int argc, char *argv[])
     free(a);
     free(x);
     free(b);
-    free(c);
+    // free(c);
     free(p);
-    // free(b);
     return 0;
 }
