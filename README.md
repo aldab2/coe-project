@@ -16,3 +16,9 @@ gcc seq.c -o seq
 /opt/homebrew/opt/llvm/bin/clang -L/opt/homebrew/opt/libomp/lib -fopenmp par.c -o par
 ./par
 ```
+
+// Run through gprof
+// gcc -Wall -pg -fopenmp par.c -o par
+// ./par
+// gprof par gmon.out > profile.txt
+// cat profile.txt
