@@ -16,13 +16,14 @@
 #define MAXITER 20
 double max_err = 0.000000000000000000000000001;
 int N = 3;
-void save_to_file(double (*x)[N], char filename[]);
+void term1(double(*x), double(*b));
+void compute_right(double(*x), double(*p), double (*a)[N]);
+void compute_left(double(*x), double (*a)[N]);
+
 int main(int argc, char *argv[])
 {
     double(*x) = malloc(sizeof(double[N])), (*a)[N] = malloc(sizeof(double[N][N]));
-    double(*err) = malloc(sizeof(double[N]))
-    // , (*c) = malloc(sizeof(double[N]))
-    , (*p) = malloc(sizeof(double[N]));
+    double(*err) = malloc(sizeof(double[N])), (*p) = malloc(sizeof(double[N]));
     double(*b) = malloc(sizeof(double[N]));
     int i, j, k, iter;
     double dtime;
@@ -62,44 +63,11 @@ int main(int argc, char *argv[])
     // Outer Iterater
     for (iter = 1; iter <= MAXITER; iter++)
     {
-#pragma omp parallel for
-        {
-            for (i = 0; i < N; i++)
-            {
-                x[i] = b[i];
-            }
-        }
-        //compute the right of diagnoal
-#pragma omp parallel for private(j)
-        {
-            for (i = 0; i < N; i++)
-            {
-                // x[i] = b[i];
-                for (j = i + 1; j < N; j++)
-                {
-                    x[i] = x[i] - p[j] * a[i][j];
-                }
-            }
-        }
-        //by end of this x[0](1) is computed
-        //b 
-        // x[1](1) still needs the value of x[0](1)
-        //compute the left of diagnoal
-
+        term1(x, b);
+        compute_right(x, p, a);
+        compute_left(x, a);
         for (i = 0; i < N; i++)
         {
-            #pragma omp parallel for
-            for (j = 0; j < i; j++)
-            {
-                #pragma omp critical
-                x[i] = x[i] - x[j] * a[i][j];  
-            }
-            x[i] = x[i] / a[i][i];
-        }
-
-        for (i = 0; i < N; i++)
-        {
-            // x[i] = x[i] / a[i][i];
             err[i] = fabs(x[i] - p[i]);
             p[i] = x[i];
         }
@@ -136,7 +104,45 @@ int main(int argc, char *argv[])
     free(a);
     free(x);
     free(b);
-    // free(c);
     free(p);
     return 0;
+}
+
+void term1(double(*x), double(*b))
+{
+#pragma omp parallel for
+    {
+        for (int i = 0; i < N; i++)
+        {
+            x[i] = b[i];
+        }
+    }
+}
+
+void compute_right(double(*x), double(*p), double (*a)[N])
+{
+#pragma omp parallel for
+    {
+        for (int i = 0; i < N; i++)
+        {
+            for (int j = i + 1; j < N; j++)
+            {
+                x[i] = x[i] - p[j] * a[i][j];
+            }
+        }
+    }
+}
+
+void compute_left(double(*x), double (*a)[N])
+{
+    for (int i = 0; i < N; i++)
+    {
+#pragma omp parallel for
+        for (int j = 0; j < i; j++)
+        {
+#pragma omp critical
+            x[i] = x[i] - x[j] * a[i][j];
+        }
+        x[i] = x[i] / a[i][i];
+    }
 }
