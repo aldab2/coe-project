@@ -18,9 +18,9 @@ gcc seq.c -o seq
 ```
 
 // Run through gprof
-// gcc -Wall -pg -fopenmp par.c -o par
-// ./par
-// gprof par gmon.out > profile.txt
-// cat profile.txt
-
+```
 gcc  -Wall -pg -fopenmp par.c -o par
+./par
+gprof par gmon.out > profile.txt
+cat profile.txt
+```
