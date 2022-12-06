@@ -4,7 +4,7 @@
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
-#include <omp.h>
+// #include <omp.h>
 /* Arranging given system of linear
    equations in diagonally dominant
    form:
@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
     for (i = 0; i < N; i++)
         for (j = 0; j < N; j++)
         {
-            
-            x[i] = 0;    
+
+            x[i] = 0;
             c[i] = 0;
             err[i] = 0;
         }
@@ -51,73 +51,62 @@ int main(int argc, char *argv[])
     b[0] = 17;
     b[1] = -18;
     b[2] = 25;
-    
+
     gettimeofday(&tv, NULL);
     ssec = tv.tv_sec;
     susec = tv.tv_usec;
 
     // Outer Iterater
     for (iter = 1; iter <= MAXITER; iter++)
-    {  #pragma omp parallel for default(shared) private(j)
+    {
         for (i = 0; i < N; i++)
         {
             // x[i] = b
+            //x[0] = b[0] - x[1]* a[0][1] - x[2]*a[0][2]
+            //x[1] = b[1] - x[0]*a[1][0] - x[2]*a[1][2]
+            //x[2] = b[1] - x[0]*a[1][0] - x[2]*a[1][2]
             x[i] = b[i];
             for (j = 0; j < N; j++)
             {
-                if (j < i)
-                {
-                    printf("iter = %d i=%d ,j=%d X[%d]= %.4f - (%.4f * %.4f) = %.4f\n",iter,i,j,i,x[i],c[j],a[i][j],(x[i] - (c[j] * a[i][j])));
-
-                    x[i] = x[i] - (c[j] * a[i][j]);
-                }
-                else if (j >i)
-                {
-                    printf("iter = %d i=%d ,j=%d X[%d]= %.4f - (%.4f * %.4f) = %.4f\n",iter,i,j,i,x[i],x[j],a[i][j],(x[i] - (c[j] * a[i][j])));
-
-                    x[i] = x[i] - (x[j] * a[i][j]);
-                    
+                if(i != j){
+                   x[i] = x[i] - (x[j] * a[i][j]); 
                 }
             }
-           
             x[i] = x[i] / a[i][i];
-            err[i] = fabs(x[i]-c[i]);
+            err[i] = fabs(x[i] - c[i]);
             c[i] = x[i];
-            
-            
         }
         int errGreaterThanMax = 0;
 
-        for(int k = 0 ;k<N ; k++){
-                
-                if(err[k] >= max_err){
-                    errGreaterThanMax = 1;
-                }
-                
-                
-            }
-            
-            if(errGreaterThanMax == 0){
-                printf("Reached max error... Stopping\n");
-                break;
-            }
-                
+        for (int k = 0; k < N; k++)
+        {
 
-        printf("Iteration:%d\t%0.4f\t%0.4f\t%0.4f\n",iter, x[0],x[1],x[2]);
+            if (err[k] >= max_err)
+            {
+                errGreaterThanMax = 1;
+            }
+        }
+
+        if (errGreaterThanMax == 0)
+        {
+            printf("Reached max error... Stopping\n");
+            break;
+        }
+
+        printf("Iteration:%d\t%0.4f\t%0.4f\t%0.4f\n", iter, x[0], x[1], x[2]);
     }
     gettimeofday(&tv, NULL);
     esec = tv.tv_sec;
     eusec = tv.tv_usec;
-    dtime = ((esec * 1.0) + ((eusec * 1.0) )) - ((ssec * 1.0) + ((susec * 1.0) ));
+    dtime = ((esec * 1.0) + ((eusec * 1.0))) - ((ssec * 1.0) + ((susec * 1.0)));
     printf("time %f\n", dtime);
-    
+
     for (i = 0; i < N; i++)
     {
-        printf("\nSolution: x[%d]=%0.3f\n",i, x[i]);
+        printf("\nSolution: x[%d]=%0.3f\n", i, x[i]);
     }
     free(a);
     free(x);
     free(b);
     return 0;
 }
-
