@@ -22,3 +22,5 @@ gcc seq.c -o seq
 // ./par
 // gprof par gmon.out > profile.txt
 // cat profile.txt
+
+gcc  -Wall -pg -fopenmp par.c -o par

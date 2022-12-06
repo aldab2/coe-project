@@ -111,24 +111,20 @@ int main(int argc, char *argv[])
 void term1(double(*x), double(*b))
 {
 #pragma omp parallel for
+    for (int i = 0; i < N; i++)
     {
-        for (int i = 0; i < N; i++)
-        {
-            x[i] = b[i];
-        }
+        x[i] = b[i];
     }
 }
 
 void compute_right(double(*x), double(*p), double (*a)[N])
 {
 #pragma omp parallel for
+    for (int i = 0; i < N; i++)
     {
-        for (int i = 0; i < N; i++)
+        for (int j = i + 1; j < N; j++)
         {
-            for (int j = i + 1; j < N; j++)
-            {
-                x[i] = x[i] - p[j] * a[i][j];
-            }
+            x[i] = x[i] - p[j] * a[i][j];
         }
     }
 }
@@ -141,7 +137,9 @@ void compute_left(double(*x), double (*a)[N])
         for (int j = 0; j < i; j++)
         {
 #pragma omp critical
-            x[i] = x[i] - x[j] * a[i][j];
+            {
+                x[i] = x[i] - x[j] * a[i][j];
+            }
         }
         x[i] = x[i] / a[i][i];
     }
