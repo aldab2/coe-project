@@ -60,16 +60,15 @@ int main(int argc, char *argv[])
     // Outer Iterater
     for (iter = 1; iter <= MAXITER; iter++)
     {
-// #pragma omp parallel for
+#pragma omp parallel for
         {
             for (i = 0; i < N; i++)
             {
                 x[i] = b[i];
             }
         }
-
         //compute the right of diagnoal
-// #pragma omp parallel for
+#pragma omp parallel for private(j)
         {
             for (i = 0; i < N; i++)
             {
@@ -83,19 +82,22 @@ int main(int argc, char *argv[])
         //by end of this x[0](1) is computed
         //b 
         // x[1](1) still needs the value of x[0](1)
-        
         //compute the left of diagnoal
-        for (i = 1; i < N; i++)
+
+        for (i = 0; i < N; i++)
         {
+            #pragma omp parallel for
             for (j = 0; j < i; j++)
             {
-                x[i] = x[i] - x[j] * a[i][j];
+                #pragma omp critical
+                x[i] = x[i] - x[j] * a[i][j];  
             }
+            x[i] = x[i] / a[i][i];
         }
 
         for (i = 0; i < N; i++)
         {
-            x[i] = x[i] / a[i][i];
+            // x[i] = x[i] / a[i][i];
             err[i] = fabs(x[i] - p[i]);
             p[i] = x[i];
         }
