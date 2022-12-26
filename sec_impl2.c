@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 #include <omp.h>
 /* Arranging given system of linear
    equations in diagonally dominant
@@ -12,58 +13,43 @@
    3x + 20y -z = -18
    2x - 3y + 20z = 25
 */
-//#define N 960
+// #define N 960
 #define MAXITER 1000
 #define MAX 50
-double max_err = 0.000000000000000000000000001;
-int N = 3000;
+double accepted_err = 1E-7;
+int N = 50000;
 void term1(double(*x), double **b);
 void compute_right(double(*x), double(*p), double ***a);
-void compute_left(double(*x),double ***a);
+void compute_left(double(*x), double ***a);
 // Generate a random double number with the maximum value of max
-double rand_double(int max){
-  return ((double)rand()/(double)(RAND_MAX)) * max;
+double rand_double(int max)
+{
+    return ((double)rand() / (double)(RAND_MAX)) * max;
 }
 
-
-void allocate_init_DD_2Dmatrix(double ***mat,double **b, int n, int m);
+void allocate_init_DD_2Dmatrix(double ***mat, double **b, int n, int m);
 
 int main(int argc, char *argv[])
 {
     double(*x) = malloc(sizeof(double[N]));
-    double (**a);// = malloc(sizeof(double[N][N]));
+    double(**a); // = malloc(sizeof(double[N][N]));
     double(*err) = malloc(sizeof(double[N])), (*p) = malloc(sizeof(double[N]));
-    double(*b) ;//= malloc(sizeof(double[N]));
+    double(*b); //= malloc(sizeof(double[N]));
     int i, j, k, iter;
     double start_time;
+    double avgErr;
+    double oldErr;
     printf("Starting...\n");
-    allocate_init_DD_2Dmatrix(&a,&b, N,N);
+    allocate_init_DD_2Dmatrix(&a, &b, N, N);
     for (i = 0; i < N; i++)
         for (j = 0; j < N; j++)
         {
 
             x[i] = 0;
             p[i] = 0;
-            // c[i] = 0;
-            err[i] = 0;
+            err[i] = 100;
         }
-    // init a
-    //    20x + y - 2z = 17
-    //    3x + 20y -z = -18
-    //    2x - 3y + 20z = 25
-    // a[0][0] = 20;
-    // a[0][1] = 1;
-    // a[0][2] = -2;
-    // a[1][0] = 3;
-    // a[1][1] = 20;
-    // a[1][2] = -1;
-    // a[2][0] = 2;
-    // a[2][1] = -3;
-    // a[2][2] = 20;
-    // // init b
-    // b[0] = 17;
-    // b[1] = -18;
-    // b[2] = 25;
+
 
     start_time = omp_get_wtime();
 
@@ -73,37 +59,38 @@ int main(int argc, char *argv[])
         term1(x, &b);
         compute_right(x, p, &a);
         compute_left(x, &a);
+        int errGreaterThanMax = 1;
+        oldErr = avgErr;
+        avgErr = 0;
         for (i = 0; i < N; i++)
         {
             err[i] = fabs(x[i] - p[i]);
             p[i] = x[i];
+            avgErr += err[i];
         }
+        avgErr /= N;
 
-        int errGreaterThanMax = 0;
-
-        for (int k = 0; k < N; k++)
+        if (fabs(oldErr-avgErr) < accepted_err)
         {
-
-            if (err[k] >= max_err)
-            {
-                ///errGreaterThanMax = 1;
-            }
-        }
-
- /*       if (errGreaterThanMax == 0)
-        {
-            printf("Reached max error... Stopping\n");
+            printf("Converged after %d iterations ... Stopping\n", iter);
             break;
-        }*/
+        }
+        if (iter> 995)
+        {
+            printf(" change %.12lf\n",fabs(oldErr-avgErr));
+        }
 
-        //printf("Iteration:%d\t%0.4f\t%0.4f\t%0.4f\n", iter, x[0], x[1], x[2]);
+        // printf("Iteration:%d\t%0.4f\t%0.4f\t%0.4f\n", iter, x[0], x[1], x[2]);
     }
     double run_time = omp_get_wtime() - start_time;
     printf("time %f\n", run_time);
+    {
+        printf("%.10lf vs %.10lf (%d)\n", avgErr, accepted_err, avgErr >= accepted_err);
+    }
 
     for (i = 0; i < N; i++)
     {
-        //printf("\nSolution: x[%d]=%0.3f\n", i, x[i]);
+        // printf("\nSolution: x[%d]=%0.3f\n", i, x[i]);
     }
     free(a);
     free(x);
@@ -145,28 +132,34 @@ void compute_left(double(*x), double ***a)
     }
 }
 
-void allocate_init_DD_2Dmatrix(double ***mat,double **b, int n, int m){
-  int i, j;
-  *mat = (double **) malloc(n * sizeof(double *));
-  *b = (double *) malloc(n * sizeof(double ));
-  for(i = 0; i < n; i++) {
-    (*mat)[i] = (double *)malloc(m * sizeof(double));
-    for (j = 0; j < m; j++){
-        if(i==j){
-        (*mat)[i][j] = n*MAX;
+void allocate_init_DD_2Dmatrix(double ***mat, double **b, int n, int m)
+{
+    int i, j;
+    *mat = (double **)malloc(n * sizeof(double *));
+    *b = (double *)malloc(n * sizeof(double));
+    for (i = 0; i < n; i++)
+    {
+        (*mat)[i] = (double *)malloc(m * sizeof(double));
+        for (j = 0; j < m; j++)
+        {
+            if (i == j)
+            {
+                (*mat)[i][j] = n * MAX;
+            }
+            else
+                (*mat)[i][j] = rand_double(MAX);
         }
-        else
-      (*mat)[i][j] = rand_double(MAX);
-      }
-      (*b)[i]=i+1;
-  }
-  
-  //printf("Initial Matrix:\n");
-  for(i=0;i<n;i++){
-      for(j=0;j<n;j++){
-         // printf("%.2lf\t",(*mat)[i][j] );
-      }
+        (*b)[i] = i + 1;
+    }
 
-      //printf("|%.2lf\n",(*b)[i]);
-  }
-} 
+    // printf("Initial Matrix:\n");
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < n; j++)
+        {
+            // printf("%.2lf\t",(*mat)[i][j] );
+        }
+
+        // printf("|%.2lf\n",(*b)[i]);
+    }
+}

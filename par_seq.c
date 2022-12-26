@@ -17,10 +17,15 @@
 #define MAXITER 20000
 #define MAX 50
 double accepted_err = 0.1E-5;
-int N = 300;
-void term1(double(*x), double **b);
-void compute_right(double(*x), double(*p), double ***a);
-void compute_left(double(*x), double ***a);
+int N = 30;
+void omp_term1(double(*x), double **b);
+void omp_compute_right(double(*x), double(*p), double ***a);
+void omp_compute_left(double(*x), double ***a);
+
+void seq_term1(double(*x), double **b);
+void seq_compute_right(double(*x), double(*p), double ***a);
+void seq_compute_left(double(*x), double ***a);
+
 double relative_residual(double(*x), double **b, double ***a);
 // Generate a random double number with the maximum value of max
 double rand_double(int max)
@@ -32,12 +37,13 @@ void allocate_init_DD_2Dmatrix(double ***mat, double **b, int n, int m);
 
 int main(int argc, char *argv[])
 {
-    double(*x) = malloc(sizeof(double[N]));
+    double(*xp) = malloc(sizeof(double[N]));
+    double(*xs) = malloc(sizeof(double[N]));
     double(**a); // = malloc(sizeof(double[N][N]));
-    double(*err) = malloc(sizeof(double[N])), (*p) = malloc(sizeof(double[N]));
+    double(*err) = malloc(sizeof(double[N])), (*pp) = malloc(sizeof(double[N])), (*ps) = malloc(sizeof(double[N]));
     double(*b); //= malloc(sizeof(double[N]));
     int i, j, k, iter;
-    double start_time;
+    double start_time, run_time;
     double avgErr;
     double oldErr;
     double res;
@@ -48,37 +54,34 @@ int main(int argc, char *argv[])
         for (j = 0; j < N; j++)
         {
 
-            x[j] = 0;
-            p[j] = 0;
+            xp[j] = 0;
+            xs[j] = 0;
+            pp[j] = 0;
+            ps[j] = 0;
             err[j] = 100;
         }
 
     start_time = omp_get_wtime();
 
-    // Outer Iterater
+    res = 100;
+    oldres = 200;
     for (iter = 1; iter <= MAXITER; iter++)
     {
-        term1(x, &b);
-        compute_right(x, p, &a);
-        compute_left(x, &a);
-        int errGreaterThanMax = 1;
-        oldErr = avgErr;
-        avgErr = 0;
+        seq_term1(xs, &b);
+        seq_compute_right(xs, ps, &a);
+        seq_compute_left(xs, &a);
         for (i = 0; i < N; i++)
         {
-            err[i] = fabs(x[i] - p[i]);
-            p[i] = x[i];
-            avgErr += err[i];
+            ps[i] = xs[i];
         }
-        avgErr /= N;
         oldres = res;
-        res = relative_residual(x, &b, &a);
+        res = relative_residual(xs, &b, &a);
         // printf("Iter %d residual %.8lf", iter, res);
-        if (fabs(oldres - res) < accepted_err)
+        if (fabs(oldres - res) < accepted_err )
         {
             printf("iter(%d): %.12lf vs %.12lf\n", iter, fabs(oldres - res), accepted_err);
 
-            printf("Converged after %d iterations ... Stopping\n", iter);
+            printf("Sequential Converged after %d iterations ... Stopping\n", iter);
             break;
         }
         if (iter > MAXITER - 5)
@@ -86,24 +89,63 @@ int main(int argc, char *argv[])
 
         // printf("Iteration:%d\t%0.4f\t%0.4f\t%0.4f\n", iter, x[0], x[1], x[2]);
     }
-    double run_time = omp_get_wtime() - start_time;
-    printf("time %f\n", run_time);
+    run_time = omp_get_wtime() - start_time;
+    printf("sequenatial time %f\n", run_time);
     {
-        printf("%.10lf vs %.10lf (%d)\n", res, accepted_err, avgErr >= accepted_err);
+        printf("%.10lf vs %.10lf \n", res, accepted_err);
+    }
+
+    start_time = omp_get_wtime();
+
+    // Outer Iterater
+    res = 100;
+    oldres = 200;
+    for (iter = 1; iter <= MAXITER; iter++)
+    {
+        omp_term1(xp, &b);
+        omp_compute_right(xp, pp, &a);
+        omp_compute_left(xp, &a);
+        for (i = 0; i < N; i++)
+        {
+            err[i] = fabs(xp[i] - pp[i]);
+            pp[i] = xp[i];
+            avgErr += err[i];
+        }
+        oldres = res;
+        res = relative_residual(xp, &b, &a);
+        // printf("Iter %d residual %.8lf", iter, res);
+        if (fabs(oldres - res) < accepted_err)
+        {
+            printf("iter(%d): %.12lf vs %.12lf\n", iter, fabs(oldres - res), accepted_err);
+
+            printf("Parallel Converged after %d iterations ... Stopping\n", iter);
+            break;
+        }
+        if (iter > MAXITER - 5)
+            printf("iter(%d): %.12lf vs %.12lf\n", iter, fabs(oldres - res), accepted_err);
+
+        // printf("Iteration:%d\t%0.4f\t%0.4f\t%0.4f\n", iter, x[0], x[1], x[2]);
+    }
+    run_time = omp_get_wtime() - start_time;
+    printf("parallel time %f\n", run_time);
+    {
+        printf("%.10lf vs %.10lf \n", res, accepted_err);
     }
 
     for (i = 0; i < N; i++)
     {
-       // printf("\nSolution: x[%d]=%0.3f\n", i, x[i]);
+        // printf("\nSolution: x[%d]=%0.3f\n", i, x[i]);
     }
     free(a);
-    free(x);
+    free(xp);
+    free(xs);
     free(b);
-    free(p);
+    free(pp);
+    free(ps);
     return 0;
 }
 
-void term1(double(*x), double **b)
+void omp_term1(double(*x), double **b)
 {
 #pragma omp parallel for
     for (int i = 0; i < N; i++)
@@ -112,7 +154,7 @@ void term1(double(*x), double **b)
     }
 }
 
-void compute_right(double(*x), double(*p), double ***a)
+void omp_compute_right(double(*x), double(*p), double ***a)
 {
 #pragma omp parallel for
     for (int i = 0; i < N; i++)
@@ -124,11 +166,45 @@ void compute_right(double(*x), double(*p), double ***a)
     }
 }
 
-void compute_left(double(*x), double ***a)
+void omp_compute_left(double(*x), double ***a)
 {
     for (int i = 0; i < N; i++)
     {
-#pragma omp parallel for
+        // #pragma omp parallel for
+        for (int j = 0; j < i; j++)
+        {
+            // #pragma omp critical
+            {
+                x[i] = x[i] - x[j] * (*a)[i][j];
+            }
+        }
+        x[i] = x[i] / (*a)[i][i];
+    }
+}
+
+void seq_term1(double(*x), double **b)
+{
+    for (int i = 0; i < N; i++)
+    {
+        x[i] = (*b)[i];
+    }
+}
+
+void seq_compute_right(double(*x), double(*p), double ***a)
+{
+    for (int i = 0; i < N; i++)
+    {
+        for (int j = i + 1; j < N; j++)
+        {
+            x[j] = x[j] - p[j] * (*a)[i][j];
+        }
+    }
+}
+
+void seq_compute_left(double(*x), double ***a)
+{
+    for (int i = 0; i < N; i++)
+    {
         for (int j = 0; j < i; j++)
         {
             // #pragma omp critical
@@ -160,15 +236,15 @@ void allocate_init_DD_2Dmatrix(double ***mat, double **b, int n, int m)
         (*b)[i] = i + 1;
     }
 
-   // printf("Initial Matrix:\n");
+    // printf("Initial Matrix:\n");
     for (i = 0; i < n; i++)
     {
         for (j = 0; j < m; j++)
         {
-           // printf("%.2lf\t", (*mat)[i][j]);
+            // printf("%.2lf\t", (*mat)[i][j]);
         }
 
-       // printf("|%.2lf\n", (*b)[i]);
+        // printf("|%.2lf\n", (*b)[i]);
     }
 }
 double relative_residual(double(*x), double **b, double ***a)
