@@ -13,10 +13,10 @@
    2x - 3y + 20z = 25
 */
 //#define N 960
-#define MAXITER 20
+#define MAXITER 1000
 #define MAX 50
 double max_err = 0.000000000000000000000000001;
-int N = 1000;
+int N = 3000;
 void term1(double(*x), double **b);
 void compute_right(double(*x), double(*p), double ***a);
 void compute_left(double(*x),double ***a);
@@ -35,9 +35,7 @@ int main(int argc, char *argv[])
     double(*err) = malloc(sizeof(double[N])), (*p) = malloc(sizeof(double[N]));
     double(*b) ;//= malloc(sizeof(double[N]));
     int i, j, k, iter;
-    double dtime;
-    int ssec, esec, susec, eusec;
-    struct timeval tv;
+    double start_time;
     printf("Starting...\n");
     allocate_init_DD_2Dmatrix(&a,&b, N,N);
     for (i = 0; i < N; i++)
@@ -67,9 +65,7 @@ int main(int argc, char *argv[])
     // b[1] = -18;
     // b[2] = 25;
 
-    gettimeofday(&tv, NULL);
-    ssec = tv.tv_sec;
-    susec = tv.tv_usec;
+    start_time = omp_get_wtime();
 
     // Outer Iterater
     for (iter = 1; iter <= MAXITER; iter++)
@@ -90,7 +86,7 @@ int main(int argc, char *argv[])
 
             if (err[k] >= max_err)
             {
-                errGreaterThanMax = 1;
+                //errGreaterThanMax = 1;
             }
         }
 
@@ -102,11 +98,8 @@ int main(int argc, char *argv[])
 
         //printf("Iteration:%d\t%0.4f\t%0.4f\t%0.4f\n", iter, x[0], x[1], x[2]);
     }
-    gettimeofday(&tv, NULL);
-    esec = tv.tv_sec;
-    eusec = tv.tv_usec;
-    dtime = ((esec * 1.0) + ((eusec * 1.0))) - ((ssec * 1.0) + ((susec * 1.0)));
-    printf("time %f\n", dtime);
+    double run_time = omp_get_wtime() - start_time;
+    printf("time %f\n", run_time);
 
     for (i = 0; i < N; i++)
     {
@@ -130,7 +123,7 @@ void term1(double(*x), double **b)
 
 void compute_right(double(*x), double(*p), double ***a)
 {
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for 
     for (int i = 0; i < N; i++)
     {
         for (int j = i + 1; j < N; j++)
