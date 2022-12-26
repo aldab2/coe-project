@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
 
     for (i = 0; i < N; i++)
     {
-        //printf("\nSolution: x[%d]=%0.3f\n", i, x[i]);
+       // printf("\nSolution: x[%d]=%0.3f\n", i, x[i]);
     }
     free(a);
     free(x);
@@ -121,7 +121,6 @@ int main(int argc, char *argv[])
 
 void term1(double(*x), double **b)
 {
-#pragma omp parallel for
     for (int i = 0; i < N; i++)
     {
         x[i] = (*b)[i];
@@ -130,7 +129,6 @@ void term1(double(*x), double **b)
 
 void compute_right(double(*x), double(*p), double ***a)
 {
-#pragma omp parallel for num_threads(16)
     for (int i = 0; i < N; i++)
     {
         for (int j = i + 1; j < N; j++)
@@ -144,10 +142,8 @@ void compute_left(double(*x), double ***a)
 {
     for (int i = 0; i < N; i++)
     {
-//#pragma omp parallel for
         for (int j = 0; j < i; j++)
         {
-//#pragma omp critical
             {
                 x[i] = x[i] - x[j] * (*a)[i][j];
             }
@@ -172,12 +168,12 @@ void allocate_init_DD_2Dmatrix(double ***mat,double **b, int n, int m){
       (*b)[i]=i+1;
   }
   
-  //printf("Initial Matrix:\n");
+ // printf("Initial Matrix:\n");
   for(i=0;i<n;i++){
       for(j=0;j<n;j++){
-         // printf("%.2lf\t",(*mat)[i][j] );
+          //printf("%.2lf\t",(*mat)[i][j] );
       }
 
-      //printf("|%.2lf\n",(*b)[i]);
+     // printf("|%.2lf\n",(*b)[i]);
   }
 } 
