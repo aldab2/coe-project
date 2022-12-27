@@ -16,7 +16,7 @@
 // #define N 960
 #define MAXITER 1000
 #define MAX 50
-double accepted_err = 1E-7;
+double accepted_err =0; //1E-7;
 int N = 50000;
 void term1(double(*x), double **b);
 void compute_right(double(*x), double(*p), double ***a);
