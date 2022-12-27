@@ -16,8 +16,8 @@
 // #define N 960
 #define MAXITER 20000
 #define MAX 50
-double accepted_err = 0.1E-5;
-int N = 30;
+double accepted_err = 0.1E-50;
+int N = 500;
 void omp_term1(double(*x), double **b);
 void omp_compute_right(double(*x), double(*p), double ***a);
 void omp_compute_left(double(*x), double ***a);
@@ -50,16 +50,14 @@ int main(int argc, char *argv[])
     double oldres;
     printf("Starting...\n");
     allocate_init_DD_2Dmatrix(&a, &b, N, N);
-    for (i = 0; i < N; i++)
-        for (j = 0; j < N; j++)
-        {
-
-            xp[j] = 0;
-            xs[j] = 0;
-            pp[j] = 0;
-            ps[j] = 0;
-            err[j] = 100;
-        }
+    for (j = 0; j < N; j++)
+    {
+        xp[j] = 0;
+        xs[j] = 0;
+        pp[j] = 0;
+        ps[j] = 0;
+        err[j] = 100;
+    }
 
     start_time = omp_get_wtime();
 
@@ -77,7 +75,7 @@ int main(int argc, char *argv[])
         oldres = res;
         res = relative_residual(xs, &b, &a);
         // printf("Iter %d residual %.8lf", iter, res);
-        if (fabs(oldres - res) < accepted_err )
+        if (fabs(oldres - res) < accepted_err)
         {
             printf("iter(%d): %.12lf vs %.12lf\n", iter, fabs(oldres - res), accepted_err);
 
@@ -92,7 +90,7 @@ int main(int argc, char *argv[])
     run_time = omp_get_wtime() - start_time;
     printf("sequenatial time %f\n", run_time);
     {
-        printf("%.10lf vs %.10lf \n", res, accepted_err);
+        printf("%.10lf vs %.10lf \n", fabs(oldres - res), accepted_err);
     }
 
     start_time = omp_get_wtime();
@@ -129,7 +127,7 @@ int main(int argc, char *argv[])
     run_time = omp_get_wtime() - start_time;
     printf("parallel time %f\n", run_time);
     {
-        printf("%.10lf vs %.10lf \n", res, accepted_err);
+        printf("%.10lf vs %.10lf \n", fabs(oldres - res), accepted_err);
     }
 
     for (i = 0; i < N; i++)
@@ -161,7 +159,7 @@ void omp_compute_right(double(*x), double(*p), double ***a)
     {
         for (int j = i + 1; j < N; j++)
         {
-            x[j] = x[j] - p[j] * (*a)[i][j];
+            x[i] = x[i] - p[j] * (*a)[i][j];
         }
     }
 }
@@ -196,7 +194,7 @@ void seq_compute_right(double(*x), double(*p), double ***a)
     {
         for (int j = i + 1; j < N; j++)
         {
-            x[j] = x[j] - p[j] * (*a)[i][j];
+            x[i] = x[i] - p[j] * (*a)[i][j];
         }
     }
 }
@@ -228,7 +226,7 @@ void allocate_init_DD_2Dmatrix(double ***mat, double **b, int n, int m)
         {
             if (i == j)
             {
-                (*mat)[i][j] = (i + 1) * MAX;
+                (*mat)[i][j] = (N)*MAX; // i + 1
             }
             else
                 (*mat)[i][j] = rand_double(MAX);

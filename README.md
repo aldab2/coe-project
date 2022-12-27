@@ -13,6 +13,12 @@ gcc seq.c -o seq
 ```
 
 ```
+/opt/homebrew/opt/llvm/bin/clang -L/opt/homebrew/opt/libomp/lib -fopenmp par_seq.c -o par_seq
+./par_seq
+```
+
+
+```
 /opt/homebrew/opt/llvm/bin/clang -L/opt/homebrew/opt/libomp/lib -fopenmp par.c -o par
 ./par
 ```
