@@ -14,11 +14,11 @@
    2x - 3y + 20z = 25
 */
 // #define N 960
-#define MAXITER 1000
+#define MAXITER 2000
 #define MAX 50
 // double accepted_err = 0.1E-50;
 double accepted_err = 0;
-int N = 1000;
+int N = 2000;
 void omp_term1(double(*x), double **b);
 void omp_compute_right(double(*x), double(*p), double ***a);
 void omp_compute_left(double(*x), double ***a);
@@ -160,13 +160,16 @@ void omp_term1(double(*x), double **b)
 
 void omp_compute_right(double(*x), double(*p), double ***a)
 {
-#pragma omp parallel for
+#pragma omp parallel
     {
-        for (int i = 0; i < N; i++)
+#pragma omp for nowait
         {
-            for (int j = i + 1; j < N; j++)
+            for (int i = 0; i < N; i++)
             {
-                x[i] = x[i] - p[j] * (*a)[i][j];
+                for (int j = i + 1; j < N; j++)
+                {
+                    x[i] = x[i] - p[j] * (*a)[i][j];
+                }
             }
         }
     }
@@ -192,11 +195,14 @@ void omp_compute_left(double(*x), double ***a)
 
 void omp_compute_left_computed(double(*x), double ***a, int computed)
 {
-#pragma omp parallel for
+#pragma omp parallel
     {
-        for (int i = computed + 1; i < N; i++)
+#pragma omp for nowait
         {
-            x[i] = x[i] - x[computed] * (*a)[i][computed];
+            for (int i = computed + 2; i < N; i++)
+            {
+                x[i] = x[i] - x[computed] * (*a)[i][computed];
+            }
         }
     }
     if (computed < N - 1)
