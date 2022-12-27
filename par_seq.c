@@ -17,7 +17,7 @@
 #define MAXITER 20000
 #define MAX 50
 double accepted_err = 0.1E-50;
-int N = 500;
+int N = 3;
 void omp_term1(double(*x), double **b);
 void omp_compute_right(double(*x), double(*p), double ***a);
 void omp_compute_left(double(*x), double ***a);
@@ -30,7 +30,7 @@ double relative_residual(double(*x), double **b, double ***a);
 // Generate a random double number with the maximum value of max
 double rand_double(int max)
 {
-    return ((double)rand() / (double)(RAND_MAX)) * max;
+    return ((double)arc4random() / (double)(RAND_MAX)) * max;
 }
 
 void allocate_init_DD_2Dmatrix(double ***mat, double **b, int n, int m);
@@ -132,7 +132,11 @@ int main(int argc, char *argv[])
 
     for (i = 0; i < N; i++)
     {
-        // printf("\nSolution: x[%d]=%0.3f\n", i, x[i]);
+        printf("\nSolution: x[%d]=%0.3f\n", i, xs[i]);
+    }
+    for (i = 0; i < N; i++)
+    {
+        printf("\nSolution: x[%d]=%0.3f\n", i, xp[i]);
     }
     free(a);
     free(xp);
@@ -234,15 +238,15 @@ void allocate_init_DD_2Dmatrix(double ***mat, double **b, int n, int m)
         (*b)[i] = i + 1;
     }
 
-    // printf("Initial Matrix:\n");
+    printf("Initial Matrix:\n");
     for (i = 0; i < n; i++)
     {
         for (j = 0; j < m; j++)
         {
-            // printf("%.2lf\t", (*mat)[i][j]);
+            printf("%.2lf\t", (*mat)[i][j]);
         }
 
-        // printf("|%.2lf\n", (*b)[i]);
+        printf("|%.2lf\n", (*b)[i]);
     }
 }
 double relative_residual(double(*x), double **b, double ***a)
