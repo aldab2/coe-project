@@ -14,13 +14,15 @@
    2x - 3y + 20z = 25
 */
 // #define N 960
-#define MAXITER 20000
+#define MAXITER 1000
 #define MAX 50
-double accepted_err = 0.1E-50;
-int N = 3;
+// double accepted_err = 0.1E-50;
+double accepted_err = 0;
+int N = 1000;
 void omp_term1(double(*x), double **b);
 void omp_compute_right(double(*x), double(*p), double ***a);
 void omp_compute_left(double(*x), double ***a);
+void omp_compute_left_computed(double(*x), double ***a, int computed);
 
 void seq_term1(double(*x), double **b);
 void seq_compute_right(double(*x), double(*p), double ***a);
@@ -132,11 +134,11 @@ int main(int argc, char *argv[])
 
     for (i = 0; i < N; i++)
     {
-        printf("\nSolution: x[%d]=%0.3f\n", i, xs[i]);
+        // printf("\nSolution: x[%d]=%0.3f\n", i, xs[i]);
     }
     for (i = 0; i < N; i++)
     {
-        printf("\nSolution: x[%d]=%0.3f\n", i, xp[i]);
+        // printf("\nSolution: x[%d]=%0.3f\n", i, xp[i]);
     }
     free(a);
     free(xp);
@@ -159,28 +161,52 @@ void omp_term1(double(*x), double **b)
 void omp_compute_right(double(*x), double(*p), double ***a)
 {
 #pragma omp parallel for
-    for (int i = 0; i < N; i++)
     {
-        for (int j = i + 1; j < N; j++)
+        for (int i = 0; i < N; i++)
         {
-            x[i] = x[i] - p[j] * (*a)[i][j];
+            for (int j = i + 1; j < N; j++)
+            {
+                x[i] = x[i] - p[j] * (*a)[i][j];
+            }
         }
     }
 }
 
 void omp_compute_left(double(*x), double ***a)
 {
-    for (int i = 0; i < N; i++)
+    // #pragma omp parallel for
+    // {
+    //     for (int i = 0; i < N; i++)
+    //     {
+    //         for (int j = 0; j < i; j++)
+    //         {
+    //             x[i] = x[i] - x[j] * (*a)[i][j];
+    //         }
+    //         x[i] = x[i] / (*a)[i][i];
+    //         omp_compute_left_computed(x, a, i);
+    //     }
+    // }
+    x[0] = x[0] / (*a)[0][0];
+    omp_compute_left_computed(x, a, 0);
+}
+
+void omp_compute_left_computed(double(*x), double ***a, int computed)
+{
+#pragma omp parallel for
     {
-        // #pragma omp parallel for
-        for (int j = 0; j < i; j++)
+        for (int i = computed + 1; i < N; i++)
         {
-            // #pragma omp critical
-            {
-                x[i] = x[i] - x[j] * (*a)[i][j];
-            }
+            x[i] = x[i] - x[computed] * (*a)[i][computed];
         }
-        x[i] = x[i] / (*a)[i][i];
+    }
+    if (computed < N - 1)
+    {
+        x[computed + 1] = x[computed + 1] / (*a)[computed + 1][computed + 1];
+        omp_compute_left_computed(x, a, computed + 1);
+    }
+    else
+    {
+        return;
     }
 }
 
@@ -238,15 +264,15 @@ void allocate_init_DD_2Dmatrix(double ***mat, double **b, int n, int m)
         (*b)[i] = i + 1;
     }
 
-    printf("Initial Matrix:\n");
+    // printf("Initial Matrix:\n");
     for (i = 0; i < n; i++)
     {
         for (j = 0; j < m; j++)
         {
-            printf("%.2lf\t", (*mat)[i][j]);
+            // printf("%.2lf\t", (*mat)[i][j]);
         }
 
-        printf("|%.2lf\n", (*b)[i]);
+        // printf("|%.2lf\n", (*b)[i]);
     }
 }
 double relative_residual(double(*x), double **b, double ***a)
