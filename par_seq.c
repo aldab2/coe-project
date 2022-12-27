@@ -18,7 +18,7 @@
 #define MAX 50
 // double accepted_err = 0.1E-50;
 double accepted_err = 0;
-int N = 2000;
+int N = 1000;
 void omp_term1(double(*x), double **b);
 void omp_compute_right(double(*x), double(*p), double ***a);
 void omp_compute_left(double(*x), double ***a);
@@ -178,19 +178,24 @@ void omp_compute_right(double(*x), double(*p), double ***a)
 void omp_compute_left(double(*x), double ***a)
 {
     // #pragma omp parallel for
-    // {
-    //     for (int i = 0; i < N; i++)
-    //     {
-    //         for (int j = 0; j < i; j++)
-    //         {
-    //             x[i] = x[i] - x[j] * (*a)[i][j];
-    //         }
-    //         x[i] = x[i] / (*a)[i][i];
-    //         omp_compute_left_computed(x, a, i);
-    //     }
-    // }
-    x[0] = x[0] / (*a)[0][0];
-    omp_compute_left_computed(x, a, 0);
+    {
+        for (int i = 0; i < N; i++)
+        {
+            // for (int j = 0; j < i; j++)
+            // {
+            //     x[i] = x[i] - x[j] * (*a)[i][j];
+            // }
+            x[i] = x[i] / (*a)[i][i];
+            #pragma omp parallel for
+            for (int j = i + 1; j < N; j++)
+            {
+                x[j] = x[j] - x[i] * (*a)[j][i];
+            }
+            // omp_compute_left_computed(x, a, i);
+        }
+    }
+    // x[0] = x[0] / (*a)[0][0];
+    // omp_compute_left_computed(x, a, 0);
 }
 
 void omp_compute_left_computed(double(*x), double ***a, int computed)
@@ -205,7 +210,7 @@ void omp_compute_left_computed(double(*x), double ***a, int computed)
             }
         }
     }
-    
+
     if (computed < N - 1)
     {
         x[computed + 1] = x[computed + 1] / (*a)[computed + 1][computed + 1];
