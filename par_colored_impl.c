@@ -16,13 +16,12 @@
 // #define N 960
 #define MAXITER 1000
 #define MAX 50
-double accepted_err =0; //1E-7;
+double accepted_err = 0.1E-5;
 int N = 300;
 void term1(double(*x), double **b);
 void compute_right(double(*x), double(*p), double ***a);
 void compute_left(double(*x), double ***a);
 double relative_residual(double(*x), double **b, double ***a);
-
 // Generate a random double number with the maximum value of max
 double rand_double(int max)
 {
@@ -49,30 +48,57 @@ int main(int argc, char *argv[])
         for (j = 0; j < N; j++)
         {
 
-            x[i] = 0;
-            p[i] = 0;
-            err[i] = 100;
+            x[j] = 0;
+            p[j] = 0;
+            err[j] = 100;
         }
-
 
     start_time = omp_get_wtime();
 
     // Outer Iterater
     for (iter = 1; iter <= MAXITER; iter++)
     {
-        term1(x, &b);
-        compute_right(x, p, &a);
-        compute_left(x, &a);
-        int errGreaterThanMax = 1;
-        oldErr = avgErr;
-        avgErr = 0;
-        for (i = 0; i < N; i++)
+        // Setup (Calculate x0):
+        // term1
+        x[0] = b[0];
+        // other terms
+        for (j = 1; j < N; j++)
         {
+            x[0] = x[0] - p[j] * (a)[0][j];
+        }
+
+        //devide by coofecient
+         x[0] = x[0] / (a)[0][0];
+        // update previous
+        p[0] = x[0];
+
+        for (i = 1; i < N; i++)
+        {
+            // term1
+            x[i] = b[i];
+
+// Black iteration in parallel
+#pragma omp parallel for //reduction(+:x[i])
+            for (j = i+1; j < N; j++)
+            {
+                
+                x[i] = x[i] - p[j] * (a)[i][j];
+            }
+// Blue Iteration in parallel
+#pragma omp parallel for// reduction(+:x[i])
+            for (j = i - 1; j >= 0; j--)
+            {
+
+                x[i] = x[i] - x[j] * (a)[i][j];
+            }
+            //devide by coofecient
+         x[i] = x[i] / (a)[i][i];
+            // update previous
             p[i] = x[i];
         }
         oldres = res;
         res = relative_residual(x, &b, &a);
-
+        // printf("Iter %d residual %.8lf", iter, res);
         if (fabs(oldres - res) < accepted_err)
         {
             printf("iter(%d): %.12lf vs %.12lf\n", iter, fabs(oldres - res), accepted_err);
@@ -80,19 +106,18 @@ int main(int argc, char *argv[])
             printf("Converged after %d iterations ... Stopping\n", iter);
             break;
         }
-         if (iter > MAXITER - 5)
+        if (iter > MAXITER - 5)
             printf("iter(%d): %.12lf vs %.12lf\n", iter, fabs(oldres - res), accepted_err);
-
 
         // printf("Iteration:%d\t%0.4f\t%0.4f\t%0.4f\n", iter, x[0], x[1], x[2]);
     }
     double run_time = omp_get_wtime() - start_time;
     printf("time %f\n", run_time);
     {
-        printf("%.10lf vs %.10lf (%d)\n", avgErr, accepted_err, avgErr >= accepted_err);
+        printf("%.10lf vs %.10lf (%d)\n", res, accepted_err, avgErr >= accepted_err);
     }
 
-    for (i = 0; i < 3; i++)
+     for (i = 0; i < 3; i++)
     {
         printf("\nSolution: x[%d]=%0.3f\n", i, x[i]);
     }
@@ -105,6 +130,7 @@ int main(int argc, char *argv[])
 
 void term1(double(*x), double **b)
 {
+#pragma omp parallel for
     for (int i = 0; i < N; i++)
     {
         x[i] = (*b)[i];
@@ -113,12 +139,12 @@ void term1(double(*x), double **b)
 
 void compute_right(double(*x), double(*p), double ***a)
 {
+#pragma omp parallel for
     for (int i = 0; i < N; i++)
     {
         for (int j = i + 1; j < N; j++)
         {
-            x[i] = x[i] - p[j] * (*a)[i][j];
-            
+            x[j] = x[j] - p[j] * (*a)[i][j];
         }
     }
 }
@@ -127,11 +153,12 @@ void compute_left(double(*x), double ***a)
 {
     for (int i = 0; i < N; i++)
     {
+#pragma omp parallel for
         for (int j = 0; j < i; j++)
         {
+            // #pragma omp critical
             {
                 x[i] = x[i] - x[j] * (*a)[i][j];
-                
             }
         }
         x[i] = x[i] / (*a)[i][i];
@@ -150,7 +177,7 @@ void allocate_init_DD_2Dmatrix(double ***mat, double **b, int n, int m)
         {
             if (i == j)
             {
-                (*mat)[i][j] = (i+1) * MAX;
+                (*mat)[i][j] = (i + 1) * MAX;
             }
             else
                 (*mat)[i][j] = rand_double(MAX);
@@ -158,15 +185,15 @@ void allocate_init_DD_2Dmatrix(double ***mat, double **b, int n, int m)
         (*b)[i] = i + 1;
     }
 
-    // printf("Initial Matrix:\n");
+    //printf("Initial Matrix:\n");
     for (i = 0; i < n; i++)
     {
-        for (j = 0; j < n; j++)
+        for (j = 0; j < m; j++)
         {
-             //printf("%.2lf\t",(*mat)[i][j] );
+            //printf("%.2lf\t", (*mat)[i][j]);
         }
 
-         //printf("|%.2lf\n",(*b)[i]);
+        //printf("|%.2lf\n", (*b)[i]);
     }
 }
 double relative_residual(double(*x), double **b, double ***a)
