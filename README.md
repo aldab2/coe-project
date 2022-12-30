@@ -9,6 +9,6 @@ gcc gauss-seidal.c -o gauss-seidal
 
 ```
 /opt/homebrew/opt/llvm/bin/clang guess_seq_arr.c -o gauss-seidal
-gcc gauss-seidal_wave.c -o gauss-seidal_wave
-./gauss-seidal_wave 8
+gcc gauss_seidal_wave.c -o gauss_seidal_wave
+./gauss_seidal_wave 8
 ```
