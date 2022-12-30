@@ -48,10 +48,14 @@ void solver(double ***mat, int n, int m)
                 i = d; // 0,1-1  ,, 0,1,2--2,, 1-2,3
                 j = abs(diag - d);
                 printf("i: %d, j: %d\n", i, j);
-                // printf("Solver converged after %d iterations\n", cnt_iter);
-                // temp = (*mat)[i][j];
-                // (*mat)[i][j] = 0.2 * ((*mat)[i][j] + (*mat)[i][j - 1] + (*mat)[i - 1][j] + (*mat)[i][j + 1] + (*mat)[i + 1][j]);
-                // diff += fabs((*mat)[i][j] - temp);
+                if (i == 0 || j == 0 || i == n - 1 || j == n - 1)
+                {
+                    continue;
+                }
+                    // printf("Solver converged after %d iterations\n", cnt_iter);
+                    temp = (*mat)[i][j];
+                (*mat)[i][j] = 0.2 * ((*mat)[i][j] + (*mat)[i][j - 1] + (*mat)[i - 1][j] + (*mat)[i][j + 1] + (*mat)[i + 1][j]);
+                diff += fabs((*mat)[i][j] - temp);
             }
         }
         if (diff / n / n < TOL)
