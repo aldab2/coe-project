@@ -7,7 +7,7 @@
 #define MAX_ITER 1000
 #define MAX 100 //maximum value of the matrix element
 #define TOL 0.001
-#define N 300
+#define N 8
 #define THREAD_COUNT 4
 // Generate a random float number with the maximum value of max
 float rand_float(int max){
@@ -121,13 +121,13 @@ int main(int argc, char *argv[]) {
 
   colored_solver(&ac, n, n);
 
-/*   printf("Colored Results:\n");
+  printf("Colored Results:\n");
   for(int i=0 ; i<N;i++){
     for(int j=0;j<N;j++){
         printf("%.2lf\t",ac[i][j]);
     }
     printf("\n");
-  } */
+  }
   // Final operation time
   clock_t colored_f_exec_t = clock();
   float colored_exec_time = (float)(colored_f_exec_t - colored_i_exec_t) / CLOCKS_PER_SEC;
@@ -141,13 +141,13 @@ int main(int argc, char *argv[]) {
 
   seq_solver(&a, n, n);
 
-/*   printf("Seq Results:\n");
+  printf("Seq Results:\n");
   for(int i=0 ; i<N;i++){
     for(int j=0;j<N;j++){
         printf("%.2lf\t",a[i][j]);
     }
     printf("\n");
-  } */
+  }
   // Final operation time
   clock_t seq_f_exec_t = clock();
   float seq_exec_time = (float)(seq_f_exec_t - seq_i_exec_t) / CLOCKS_PER_SEC;
