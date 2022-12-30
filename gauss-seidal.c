@@ -36,12 +36,14 @@ void solver(double ***mat, int n, int m)
     {
         diff = 0;
         for (i = 1; i < n - 1; i++)
+        {
             for (j = 1; j < m - 1; j++)
             {
                 temp = (*mat)[i][j];
                 (*mat)[i][j] = 0.2 * ((*mat)[i][j] + (*mat)[i][j - 1] + (*mat)[i - 1][j] + (*mat)[i][j + 1] + (*mat)[i + 1][j]);
                 diff += fabs((*mat)[i][j] - temp);
             }
+        }
         if (diff / n / n < TOL)
             done = 1;
         cnt_iter++;
