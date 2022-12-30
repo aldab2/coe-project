@@ -43,7 +43,7 @@ void solver(double ***mat, int n, int m)
         for (diag = 1; diag < diagnolas - 1; diag++) // 5: diag=1.  -- diag=2 -- diag=3 , N
         {
             // can be paralleized, reduce diff
-            for (int d = diag > (n - 1) ? (diag - (n - 1)) : 0; d <= ((diag > (n - 1)) ? diag - 1 : diag); d++) // d=0,d=1.  --  d=0,d=1,d=2  -- 0,1
+            for (int d = diag > (n - 1) ? (diag - (n - 1)) : 0; d <= ((diag > (n - 1)) ? (diagnolas - 1) - diag : diag); d++) // d=0,d=1.  --  d=0,d=1,d=2  -- 0,1
             {
                 i = d; // 0,1-1  ,, 0,1,2--2,, 1-2,3
                 j = abs(diag - d);
