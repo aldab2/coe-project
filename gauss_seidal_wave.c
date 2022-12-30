@@ -6,7 +6,7 @@
 
 #define MAX_ITER 1000
 #define MAX 100 // maximum value of the matrix element
-#define TOL 0.000000
+#define TOL 0.000001
 
 // Generate a random double number with the maximum value of max
 double rand_double(int max)

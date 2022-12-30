@@ -3,7 +3,7 @@
 #include <time.h>
 #include <math.h>
 
-#define MAX_ITER 100
+#define MAX_ITER 1000
 #define MAX 100 // maximum value of the matrix element
 #define TOL 0.000001
 
