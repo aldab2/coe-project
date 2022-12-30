@@ -4,9 +4,10 @@
 #include <math.h>
 #include <omp.h>
 
-#define MAX_ITER 1
+#define MAX_ITER 100
 #define MAX 100 // maximum value of the matrix element
 #define TOL 0.000001
+#define THREAD_COUNT 4
 
 // Generate a random double number with the maximum value of max
 double rand_double(int max)
@@ -42,7 +43,7 @@ void solver(double ***mat, int n, int m)
 // printf("\nN diag - (n - 1): %d, (diagnolas)-diag: %d \n", (diag - (n - 1)), (diagnolas)-diag);
 // can be paralleized, reduce diff
 //((diagnolas - 1) - diag) + diag - (n - 1): move to the base of start and then add
-            #pragma omp parallel for num_threads(4) schedule(static, 20) private(temp, i, j) reduction(+:diff)
+            #pragma omp parallel for num_threads(THREAD_COUNT) schedule(static, 20) private(temp, i, j) reduction(+:diff)
             for (int d = diag > (n - 1) ? (diag - (n - 1)) : 0; d <= ((diag > (n - 1)) ? ((diagnolas - 1) - diag) + diag - (n - 1) : diag); d++) // d=0,d=1.  --  d=0,d=1,d=2  -- 0,1
             {
                 i = d;

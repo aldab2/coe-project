@@ -4,10 +4,10 @@
 #include <math.h>
 #include <omp.h>
 
-#define MAX_ITER 1
+#define MAX_ITER 1000
 #define MAX 100 // maximum value of the matrix element
 #define TOL 0.000001
-
+#define THREAD_COUNT 4
 // Generate a random double number with the maximum value of max
 double rand_double(int max)
 {
@@ -37,11 +37,11 @@ void solver(double ***mat, int n, int m)
     {
         diff = 0;
 
-#pragma omp parallel for num_threads(THREAD_COUNT) private(temp, j) reduction(+ \
-                                                                              : diff)
-        for (int i = 0; i < n; i++)
+// #pragma omp parallel for num_threads(THREAD_COUNT) private(temp, i, j) reduction(+ \
+//                                                                                  : diff)
+        for (int i = 1; i < n -1; i++)
         {
-            for (int j = i % 2 == 0 ? 0 : 1; j < (n / 2) + 2; j += 2)
+            for (int j = i % 2 == 0 ? 2 : 1; j < n-1; j += 2)
             {
                 if (i == 0 || j == 0 || i == n - 1 || j == n - 1)
                     continue;
@@ -50,11 +50,11 @@ void solver(double ***mat, int n, int m)
                 diff += fabs((*mat)[i][j] - temp);
             }
         }
-#pragma omp parallel for num_threads(THREAD_COUNT) private(temp, j) reduction(+ \
-                                                                              : diff)
-        for (int i = 0; i < n; i++)
+// #pragma omp parallel for num_threads(THREAD_COUNT) private(temp, i, j) reduction(+ \
+//                                                                                  : diff)
+        for (int i = 1; i < n-1; i++)
         {
-            for (int j = i % 2 == 1 ? 0 : 0; j < (n / 2) + 2; j += 2)
+            for (int j = i % 2 == 0 ? 1 : 2; j < n-1; j += 2)
             {
                 if (i == 0 || j == 0 || i == n - 1 || j == n - 1)
                     continue;
