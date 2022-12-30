@@ -44,6 +44,7 @@ void solver(double ***mat, int n, int m)
             {
                 int i = d;
                 int j = abs(diag - d);
+                fprintf("i: %d, j: %d\n", i, j);
                 temp = (*mat)[i][j];
                 (*mat)[i][j] = 0.2 * ((*mat)[i][j] + (*mat)[i][j - 1] + (*mat)[i - 1][j] + (*mat)[i][j + 1] + (*mat)[i + 1][j]);
                 diff += fabs((*mat)[i][j] - temp);
