@@ -39,13 +39,12 @@ void solver(double ***mat, int n, int m)
     {
         diff = 0;
         // loop over diagnolas sequantioaly
-        #pragma omp parallel for num_threads(THREAD_COUNT) schedule(static, 20) private(temp,d, i, j) reduction(+:diff)
         for (diag = 1; diag < diagnolas - 1; diag++)
         {
 // printf("\nN diag - (n - 1): %d, (diagnolas)-diag: %d \n", (diag - (n - 1)), (diagnolas)-diag);
 // can be paralleized, reduce diff
 //((diagnolas - 1) - diag) + diag - (n - 1): move to the base of start and then add
-            //#pragma omp parallel for num_threads(THREAD_COUNT) schedule(static, 20) private(temp,d, i, j) reduction(+:diff)
+            #pragma omp parallel for num_threads(THREAD_COUNT) schedule(static, 20) private(temp,d, i, j) reduction(+:diff)
             for (int d = diag > (n - 1) ? (diag - (n - 1)) : 0; d <= ((diag > (n - 1)) ? ((diagnolas - 1) - diag) + diag - (n - 1) : diag); d++) // d=0,d=1.  --  d=0,d=1,d=2  -- 0,1
             {
                 i = d;
