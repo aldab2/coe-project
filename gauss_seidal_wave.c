@@ -37,18 +37,21 @@ void solver(double ***mat, int n, int m)
     {
         diff = 0;
         // loop over diagnolas sequantioaly
-        for (diag = 1; diag < diagnolas - 1; diag++) // 5: diag=1.  -- diag=2 -- diag=3
+        // N=3, diganlas=2N-1 = 5
+        // 1 , <4
+        // n-1=2
+        for (diag = 1; diag < diagnolas - 1; diag++) // 5: diag=1.  -- diag=2 -- diag=3 , N
         {
             // can be paralleized, reduce diff
-            for (int d = diag > n - 1 ? diag - n - 1 : 0; d <= diag > n - 1 ? diag - 1 : diag; d++) // d=0,d=1.  --  d=0,d=1,d=2  -- 0,1
+            for (int d = diag > (n - 1) ? (diag - (n - 1)) : 0; d <= ((diag > (n - 1)) ? diag - 1 : diag); d++) // d=0,d=1.  --  d=0,d=1,d=2  -- 0,1
             {
-                int i = d;
-                int j = abs(diag - d);
+                i = d; // 0,1-1  ,, 0,1,2--2,, 1-2,3
+                j = abs(diag - d);
                 printf("i: %d, j: %d\n", i, j);
                 // printf("Solver converged after %d iterations\n", cnt_iter);
-                temp = (*mat)[i][j];
-                (*mat)[i][j] = 0.2 * ((*mat)[i][j] + (*mat)[i][j - 1] + (*mat)[i - 1][j] + (*mat)[i][j + 1] + (*mat)[i + 1][j]);
-                diff += fabs((*mat)[i][j] - temp);
+                // temp = (*mat)[i][j];
+                // (*mat)[i][j] = 0.2 * ((*mat)[i][j] + (*mat)[i][j - 1] + (*mat)[i - 1][j] + (*mat)[i][j + 1] + (*mat)[i + 1][j]);
+                // diff += fabs((*mat)[i][j] - temp);
             }
         }
         if (diff / n / n < TOL)
