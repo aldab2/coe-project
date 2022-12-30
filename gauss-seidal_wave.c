@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <omp.h>
 
 #define MAX_ITER 100
 #define MAX 100 // maximum value of the matrix element
@@ -36,10 +37,10 @@ void solver(double ***mat, int n, int m)
     {
         diff = 0;
         // loop over diagnolas sequantioaly
-        for (diag = 1; diag < diagnolas - 1; diag++)
+        for (diag = 1; diag < diagnolas - 1; diag++) // 5: diag=1.  -- diag=2 -- diag=3
         {
-            //can be paralleized, reduce diff
-            for (int d = 0; d <= diag; d++)
+            // can be paralleized, reduce diff
+            for (int d = diag > n - 1 ? diag - n - 1 : 0; d <= diag > n - 1 ? diag - 1 : diag; d++) // d=0,d=1.  --  d=0,d=1,d=2  -- 0,1
             {
                 int i = d;
                 int j = abs(diag - d);
