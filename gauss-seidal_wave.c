@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include <omp.h>
+// #include <omp.h>
 
 #define MAX_ITER 100
 #define MAX 100 // maximum value of the matrix element
@@ -44,7 +44,8 @@ void solver(double ***mat, int n, int m)
             {
                 int i = d;
                 int j = abs(diag - d);
-                fprintf("i: %d, j: %d\n", i, j);
+                printf("i: %d, j: %d\n", i, j);
+                // printf("Solver converged after %d iterations\n", cnt_iter);
                 temp = (*mat)[i][j];
                 (*mat)[i][j] = 0.2 * ((*mat)[i][j] + (*mat)[i][j - 1] + (*mat)[i - 1][j] + (*mat)[i][j + 1] + (*mat)[i + 1][j]);
                 diff += fabs((*mat)[i][j] - temp);
