@@ -3,7 +3,7 @@
 #include <time.h>
 #include <math.h>
 
-#define MAX_ITER 1000
+#define MAX_ITER 1
 #define MAX 100 // maximum value of the matrix element
 #define TOL 0.000001
 
@@ -74,6 +74,15 @@ int main(int argc, char *argv[])
     allocate_init_2Dmatrix(&a, n, n);
 
     // Initial operation time
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            printf("%f, ", a[i][j]);
+        }
+        printf("\n");
+    }
+    printf("beofre\n");
     clock_t i_exec_t = clock();
 
     solver(&a, n, n);
@@ -82,6 +91,16 @@ int main(int argc, char *argv[])
     clock_t f_exec_t = clock();
     double exec_time = (double)(f_exec_t - i_exec_t) / CLOCKS_PER_SEC;
     printf("Operations time: %f\n", exec_time);
+
+    printf("after\n");
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            printf("%f, ", a[i][j]);
+        }
+        printf("\n");
+    }
 
     return 0;
 }
