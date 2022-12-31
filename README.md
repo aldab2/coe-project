@@ -1,26 +1,18 @@
-# coe-project
+# Gauss Sidel Using Red Black (OpenMP and MPI)
 
 ```
-/opt/homebrew/opt/llvm/bin/clang guess_seq_arr.c -o guess_seq_arr
-gcc guess_seq_arr.c -o guess_seq_arr
-./guess_seq_arr
-```
-
-```
-/opt/homebrew/opt/llvm/bin/clang guess_seq_arr.c -o guess_seq_arr
-gcc seq.c -o seq
-./seq
+icx -fopenmp  gs_colored.c -o gs_colored
+./gs_colored 
 ```
 
 ```
-/opt/homebrew/opt/llvm/bin/clang -L/opt/homebrew/opt/libomp/lib -fopenmp par_seq.c -o par_seq
-./par_seq
+icx -fopenmp  gs_colored_seq.c -o gs_colored
+./gs_colored <N> <NUM_THREADS>
 ```
 
-
 ```
-/opt/homebrew/opt/llvm/bin/clang -L/opt/homebrew/opt/libomp/lib -fopenmp par.c -o par
-./par
+mpicc gs_colored_mpi.c -o gs_colored-mpi./par_seq
+mpirun -np <N> ./gs_colored-mpi <NUM_THREADS>
 ```
 
 // Run through gprof
