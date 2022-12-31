@@ -4,11 +4,11 @@
 #include <omp.h>
 #include <math.h>
 
-#define MAX_ITER 1000
+#define MAX_ITER 20
 #define MAX 100 //maximum value of the matrix element
 #define TOL 0.001
-#define N 8
-#define THREAD_COUNT 4
+int N =  400;
+int  THREAD_COUNT = 2;
 // Generate a random float number with the maximum value of max
 float rand_float(int max){
   return ((float)rand()/(float)(RAND_MAX)) * max;
@@ -106,8 +106,19 @@ int main(int argc, char *argv[]) {
   float **ac;
   //sequential a
   float **a;
-  n = N;
-  printf("Matrix size = %d \n", n);
+
+   if (argc < 2) {
+    printf("Call this program with two parameters: matrix_size numThreads \n");
+    printf("\t matrix_size: Add 2 to a power of 2 (e.g. : 400, 8)\n");
+    
+    exit(1);
+  }
+
+  n = atoi(argv[1]);
+  N= n;
+  THREAD_COUNT = atoi(argv[2]);
+
+  printf("Matrix size = %d  and number of threads %d\n", n,THREAD_COUNT);
   allocate_init_2Dmatrix(&ac,&a, n, n);
 
 
@@ -117,44 +128,42 @@ int main(int argc, char *argv[]) {
 
 
   // Colored Initial operation time
-  clock_t colored_i_exec_t = clock();
+  double start_time = omp_get_wtime();
 
   colored_solver(&ac, n, n);
 
-  printf("Colored Results:\n");
+  //printf("Colored Results:\n");
   for(int i=0 ; i<N;i++){
     for(int j=0;j<N;j++){
-        printf("%.2lf\t",ac[i][j]);
+        //printf("%.2lf\t",ac[i][j]);
     }
-    printf("\n");
+    //printf("\n");
   }
   // Final operation time
-  clock_t colored_f_exec_t = clock();
-  float colored_exec_time = (float)(colored_f_exec_t - colored_i_exec_t) / CLOCKS_PER_SEC;
-  printf("Colored Operations time: %f\n", colored_exec_time);
+  double colored_total_time = omp_get_wtime() - start_time;
+  printf("Colored Operations time: %f\n", colored_total_time);
 
   ///////////////
 
 
     // Sequential Initial operation time
-  clock_t seq_i_exec_t = clock();
+   double seq_start_time = omp_get_wtime();
 
   seq_solver(&a, n, n);
 
-  printf("Seq Results:\n");
+  //printf("Seq Results:\n");
   for(int i=0 ; i<N;i++){
     for(int j=0;j<N;j++){
-        printf("%.2lf\t",a[i][j]);
+        //printf("%.2lf\t",a[i][j]);
     }
-    printf("\n");
+    //printf("\n");
   }
   // Final operation time
-  clock_t seq_f_exec_t = clock();
-  float seq_exec_time = (float)(seq_f_exec_t - seq_i_exec_t) / CLOCKS_PER_SEC;
-  printf("Sequential Operations time: %f\n", seq_exec_time);
+  double seq_total_time = omp_get_wtime() - seq_start_time;
+  printf("Sequential Operations time: %f\n", seq_total_time);
 
 
-  printf("Speedup = %.3lf\n",seq_exec_time/colored_exec_time);
+  printf("Speedup = %.3lf\n",seq_total_time/colored_total_time);
 
   return 0;
 }
