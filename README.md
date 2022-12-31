@@ -2,7 +2,7 @@
 
 ```
 /opt/homebrew/opt/llvm/bin/clang -L/opt/homebrew/opt/libomp/lib -fopenmp gauss_seidal.c -o gauss_seidal
-./gauss_seidal 1400 0
+./gauss_seidal 8 0
 ```
 
 
@@ -19,7 +19,7 @@
 
 ```
 mpicc gauss_seidal_rb_mpi.c -o gauss_seidal_rb_mpi
-time mpirun -np 2 ./gauss_seidal_rb_mpi 400
+time mpirun -np 2 ./gauss_seidal_rb_mpi 8
 ```
 
 0.000783, 13.153779, 75.560532, 45.865013, 

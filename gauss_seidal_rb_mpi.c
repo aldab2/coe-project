@@ -147,8 +147,8 @@ void mpi_colored_solver(double ***mat, int n, int m, int p_rows, int rank, int s
             printf("Solver not converged after %d iterations\n", cnt_iter);
     }
     // collect to a
-    if (done)
-    {
+    // if (done)
+    // {
         if (rank > 0)
         {
             for (int i = rank * p_rows; i < (rank * p_rows) + p_rows; i++)
@@ -164,7 +164,7 @@ void mpi_colored_solver(double ***mat, int n, int m, int p_rows, int rank, int s
                 MPI_Recv((*mat)[i], n, MPI_DOUBLE, src, 0, MPI_COMM_WORLD, &status);
             }
         }
-    }
+    // }
 }
 
 int main(int argc, char *argv[])
@@ -205,14 +205,14 @@ int main(int argc, char *argv[])
     if (rank == 0)
     {
         printf("Colored Results:\n");
-        // for (int i = 0; i < n; i++)
-        // {
-        //     for (int j = 0; j < n; j++)
-        //     {
-        //         printf("%.2lf\t", a[i][j]);
-        //     }
-        //     printf("\n");
-        // }
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                printf("%.2lf\t", a[i][j]);
+            }
+            printf("\n");
+        }
         // Final operation time
         clock_t colored_f_exec_t = clock();
         double colored_exec_time = (double)(colored_f_exec_t - colored_i_exec_t) / CLOCKS_PER_SEC;
