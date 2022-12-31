@@ -13,7 +13,7 @@
 
 ```
 /opt/homebrew/opt/llvm/bin/clang -L/opt/homebrew/opt/libomp/lib -fopenmp gauss_seidal_rb_double.c -o gauss_seidal_rb_double
-./gauss_seidal_rb_double 8
+./gauss_seidal_rb_double 400 0
 ```
 
 

@@ -4,7 +4,7 @@
 #include <math.h>
 #include <omp.h>
 
-#define MAX_ITER 100
+#define MAX_ITER 20
 #define MAX 100 // maximum value of the matrix element
 #define TOL 0.000001
 #define THREAD_COUNT 8
@@ -37,8 +37,7 @@ void solver(double ***mat, int n, int m)
     {
         diff = 0;
 
-// #pragma omp parallel for num_threads(THREAD_COUNT) private(temp, i, j) reduction(+ \
-//                                                                                  : diff)
+#pragma omp parallel for num_threads(THREAD_COUNT) private(temp, i, j) reduction(+:diff)
         for (int i = 1; i < n -1; i++)
         {
             for (int j = i % 2 == 0 ? 2 : 1; j < n-1; j += 2)
@@ -50,8 +49,7 @@ void solver(double ***mat, int n, int m)
                 diff += fabs((*mat)[i][j] - temp);
             }
         }
-// #pragma omp parallel for num_threads(THREAD_COUNT) private(temp, i, j) reduction(+ \
-//                                                                                  : diff)
+#pragma omp parallel for num_threads(THREAD_COUNT) private(temp, i, j) reduction(+:diff)
         for (int i = 1; i < n-1; i++)
         {
             for (int j = i % 2 == 0 ? 1 : 2; j < n-1; j += 2)
@@ -111,15 +109,15 @@ int main(int argc, char *argv[])
     double exec_time = (double)(f_exec_t - i_exec_t) / CLOCKS_PER_SEC;
     printf("Operations time: %f\n", exec_time);
 
-    printf("after\n");
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            printf("%f, ", a[i][j]);
-        }
-        printf("\n");
-    }
+    // printf("after\n");
+    // for (int i = 0; i < n; i++)
+    // {
+    //     for (int j = 0; j < n; j++)
+    //     {
+    //         printf("%f, ", a[i][j]);
+    //     }
+    //     printf("\n");
+    // }
 
     return 0;
 }
