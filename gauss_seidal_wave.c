@@ -4,10 +4,10 @@
 #include <math.h>
 #include <omp.h>
 
-#define MAX_ITER 1000
+#define MAX_ITER 20
 #define MAX 100 // maximum value of the matrix element
-#define TOL 0.001
-#define THREAD_COUNT 4
+#define TOL 0.000001
+#define THREAD_COUNT 2
 
 // Generate a random double number with the maximum value of max
 double rand_double(int max)
@@ -44,7 +44,7 @@ void solver(double ***mat, int n, int m)
 // printf("\nN diag - (n - 1): %d, (diagnolas)-diag: %d \n", (diag - (n - 1)), (diagnolas)-diag);
 // can be paralleized, reduce diff
 //((diagnolas - 1) - diag) + diag - (n - 1): move to the base of start and then add
-            #pragma omp parallel for num_threads(THREAD_COUNT) schedule(static, 20) private(temp,d, i, j) reduction(+:diff)
+            #pragma omp parallel for num_threads(THREAD_COUNT) schedule(static, 20) private(temp, i, j) reduction(+:diff)
             for (int d = diag > (n - 1) ? (diag - (n - 1)) : 0; d <= ((diag > (n - 1)) ? ((diagnolas - 1) - diag) + diag - (n - 1) : diag); d++) // d=0,d=1.  --  d=0,d=1,d=2  -- 0,1
             {
                 i = d;
@@ -90,15 +90,15 @@ int main(int argc, char *argv[])
 
     allocate_init_2Dmatrix(&a, n, n);
 
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            //printf("%f, ", a[i][j]);
-        }
-        //printf("\n");
-    }
-    printf("beofre\n");
+    // for (int i = 0; i < n; i++)
+    // {
+    //     for (int j = 0; j < n; j++)
+    //     {
+    //         //printf("%f, ", a[i][j]);
+    //     }
+    //     //printf("\n");
+    // }
+    // printf("beofre\n");
     // Initial operation time
     double start_time = omp_get_wtime();
 
@@ -109,17 +109,17 @@ int main(int argc, char *argv[])
     //double exec_time = (double)(f_exec_t - i_exec_t) / CLOCKS_PER_SEC;
     printf("Operations time: %.2lf\n", end_time);
 
-    printf("after\n");
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            if(print)
-            printf("%f, ", a[i][j]);
-        }
-        if(print)
-        printf("\n");
-    }
+    // printf("after\n");
+    // for (int i = 0; i < n; i++)
+    // {
+    //     for (int j = 0; j < n; j++)
+    //     {
+    //         if(print)
+    //         printf("%f, ", a[i][j]);
+    //     }
+    //     if(print)
+    //     printf("\n");
+    // }
 
     return 0;
 }
