@@ -70,35 +70,27 @@ int main(int argc, char *argv[])
     }
 
     n = atoi(argv[1]);
-    int print  = atoi(argv[2]);
+    int print = atoi(argv[2]);
 
     allocate_init_2Dmatrix(&a, n, n);
-    
-    // Initial operation time
-    // for (int i = 0; i < n; i++)
-    // {
-    //     for (int j = 0; j < n; j++)
-    //     {
-    //         printf("%f, ", a[i][j]);
-    //     }
-    //     printf("\n");
-    // }
+
     double start_time = omp_get_wtime();
     solver(&a, n, n);
 
-     double end_time =  omp_get_wtime() -  start_time;
+    double end_time = omp_get_wtime() - start_time;
     printf("Operations time: %.2lf\n", end_time);
 
-    printf("after\n");
+    if (print)
+        printf("after\n");
     for (int i = 0; i < n; i++)
     {
         for (int j = 0; j < n; j++)
         {
-            // if(print)
-            printf("%f, ", a[i][j]);
+            if (print)
+                printf("%f, ", a[i][j]);
         }
-        if(print)
-        printf("\n");
+        if (print)
+            printf("\n");
     }
 
     return 0;

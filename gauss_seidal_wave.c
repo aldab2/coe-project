@@ -89,37 +89,25 @@ int main(int argc, char *argv[])
     printf("Matrix size = %d \n", n);
 
     allocate_init_2Dmatrix(&a, n, n);
-
-    // for (int i = 0; i < n; i++)
-    // {
-    //     for (int j = 0; j < n; j++)
-    //     {
-    //         //printf("%f, ", a[i][j]);
-    //     }
-    //     //printf("\n");
-    // }
-    // printf("beofre\n");
-    // Initial operation time
     double start_time = omp_get_wtime();
 
     solver(&a, n, n);
 
     // Final operation time
-     double end_time =  omp_get_wtime() -  start_time;
-    //double exec_time = (double)(f_exec_t - i_exec_t) / CLOCKS_PER_SEC;
+    double end_time =  omp_get_wtime() -  start_time;
     printf("Operations time: %.2lf\n", end_time);
 
-    // printf("after\n");
-    // for (int i = 0; i < n; i++)
-    // {
-    //     for (int j = 0; j < n; j++)
-    //     {
-    //         if(print)
-    //         printf("%f, ", a[i][j]);
-    //     }
-    //     if(print)
-    //     printf("\n");
-    // }
+    printf("after\n");
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            if(print)
+            printf("%f, ", a[i][j]);
+        }
+        if(print)
+        printf("\n");
+    }
 
     return 0;
 }
