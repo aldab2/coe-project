@@ -5,10 +5,10 @@
 #include <math.h>
 #include <mpi.h>
 
-#define MAX_ITER 1
+#define MAX_ITER 100
 #define MAX 100 // maximum value of the matrix element
 #define TOL 0.001
-#define N 4
+#define N 8
 #define THREAD_COUNT 4
 // Generate a random double number with the maximum value of max
 double rand_double(int max)
@@ -46,6 +46,52 @@ void mpi_colored_solver(double ***mat, int n, int m, int p_rows, int rank, int s
         /*(rank == size - 1) ? (((rank * p_rows) + p_rows) - 1) : ((rank * p_rows) + p_rows)*/
         for (int i = rank == 0 ? (rank * p_rows) + 1 : (rank * p_rows); i < (((rank * p_rows) + p_rows) - 1); i++)
         {
+            for (int j = i % 2 == 0 ? 2 : 1; j < n - 1; j += 2)
+            {
+                // printf("rank:%d (%d,%d)\n", rank, i, j);
+                if (i == 0 || j == 0 || i == n - 1 || j == n - 1)
+                    continue;
+                temp = (*mat)[i][j];
+                (*mat)[i][j] = 0.2 * ((*mat)[i][j] + (*mat)[i][j - 1] + (*mat)[i - 1][j] + (*mat)[i][j + 1] + (*mat)[i + 1][j]);
+                diff += fabs((*mat)[i][j] - temp);
+            }
+        }
+
+        if (rank < size - 1)
+        {
+            // if (cnt_iter == 0)
+            // {
+            //     printf("p:%d sending %.2lf to %d\n", rank, (*mat)[(rank * p_rows) + p_rows - 1][1], rank + 1);
+            // }
+            MPI_Send((*mat)[(rank * p_rows) + p_rows - 1], n, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
+        }
+        if (rank > 0)
+        {
+            MPI_Recv((*mat)[((rank - 1) * p_rows) + p_rows - 1], n, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, &status);
+            // if (cnt_iter == 0)
+            // {
+            //     printf("p:%d receiving %.2lf from %d\n", rank, (*mat)[((rank - 1) * p_rows) + p_rows - 1][1], rank - 1);
+            // }
+        }
+        if (rank > 0)
+        {
+            // if (cnt_iter == 0)
+            // {
+            //     printf("p:%d sending %.2lf to %d\n", rank, (*mat)[rank * p_rows][1], rank - 1);
+            // }
+            MPI_Send(((*mat)[rank * p_rows]), n, MPI_DOUBLE, rank - 1, 1, MPI_COMM_WORLD);
+        }
+        if (rank < size - 1)
+        {
+            MPI_Recv(((*mat)[((rank + 1) * p_rows)]), n, MPI_DOUBLE, rank + 1, 1, MPI_COMM_WORLD, &status);
+            // if (cnt_iter == 0)
+            // {
+            //     printf("p:%d receiving %.2lf from %d\n", rank, (*mat)[((rank + 1) * p_rows)][1], rank + 1);
+            // }
+        }
+
+        for (int i = rank == 0 ? (rank * p_rows) + 1 : (rank * p_rows); i < (((rank * p_rows) + p_rows) - 1); i++)
+        {
             for (int j = i % 2 == 0 ? 1 : 2; j < n - 1; j += 2)
             {
                 // printf("rank:%d (%d,%d)\n", rank, i, j);
@@ -57,112 +103,36 @@ void mpi_colored_solver(double ***mat, int n, int m, int p_rows, int rank, int s
             }
         }
 
+        MPI_Barrier(MPI_COMM_WORLD);
         if (rank < size - 1)
         {
-            printf("p:%d sending %.2lf to %d\n", rank, (*mat)[(rank * p_rows) + p_rows - 1][0], rank + 1);
+            // printf("p:%d sending %.2lf to %d\n", rank, (*mat)[(rank * p_rows) + p_rows - 1][0], rank + 1);
             MPI_Send((*mat)[(rank * p_rows) + p_rows - 1], n, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
         }
         if (rank > 0)
         {
             // printf("p:%d receiving %.2lf from %d\n", rank, (*mat)[((rank - 1) * p_rows) + p_rows - 1][0], rank - 1);
-
             MPI_Recv((*mat)[((rank - 1) * p_rows) + p_rows - 1], n, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, &status);
         }
         if (rank > 0)
         {
             // printf("p:%d sending %.2lf to %d\n", rank, (*mat)[rank * p_rows][0], rank - 1);
-            MPI_Send(((*mat)[rank * p_rows]), n, MPI_DOUBLE, rank - 1, 1, MPI_COMM_WORLD);
+            MPI_Send((*mat)[rank * p_rows], n, MPI_DOUBLE, rank - 1, 1, MPI_COMM_WORLD);
         }
         if (rank < size - 1)
         {
             // printf("p:%d receiving %.2lf from %d\n", rank, (*mat)[((rank + 1) * p_rows)][0], rank + 1);
-            MPI_Recv(((*mat)[((rank + 1) * p_rows)]), n, MPI_DOUBLE, rank + 1, 1, MPI_COMM_WORLD, &status);
-        }
-
-        /* MPI_Reduce(&diff, &reduced_diff, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0)
-        {
-            diff += reduced_diff;
-        } */
-
-        for (int i = rank == 0 ? (rank * p_rows) + 1 : (rank * p_rows); i < (((rank * p_rows) + p_rows) - 1); i++)
-        {
-            for (int j = i % 2 == 0 ? 2 : 1; j < n - 1; j += 2)
-            {
-                // printf("rank:%d (%d,%d)\n", rank, i, j);
-
-                if (i == 0 || j == 0 || i == n - 1 || j == n - 1)
-                    continue;
-                temp = (*mat)[i][j];
-                (*mat)[i][j] = 0.2 * ((*mat)[i][j] + (*mat)[i][j - 1] + (*mat)[i - 1][j] + (*mat)[i][j + 1] + (*mat)[i + 1][j]);
-                diff += fabs((*mat)[i][j] - temp);
-            }
-        }
-
-        MPI_Barrier(MPI_COMM_WORLD);
-
-        if (rank < size - 1)
-        {
-            if (rank == 0)
-            {
-                printf("R%d send (%d,n) and those are:\n", rank, (rank * p_rows) + p_rows - 1);
-                for (int j = 0; j < N; j++)
-                {
-                    printf("%.2lf\t", (*mat)[(rank * p_rows) + p_rows - 1][j]);
-                }
-                printf("\n");
-            }
-            printf("p:%d sending %.2lf to %d\n", rank, (*mat)[(rank * p_rows) + p_rows - 1][0], rank + 1);
-            MPI_Send((*mat)[(rank * p_rows) + p_rows - 1], n, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
-            printf("done\n");
-        }
-        if (rank > 0)
-        {
-
-            if (rank == 1)
-            {
-                printf("R%d got (%d,n)  and those are:\n", rank, ((rank - 1) * p_rows) + p_rows - 1);
-                for (int j = 0; j < N; j++)
-                {
-                    printf("%.2lf\t", (*mat)[((rank - 1) * p_rows) + p_rows - 1][j]);
-                }
-                printf("\n");
-            }
-            printf("p:%d receiving %.2lf from %d\n", rank, (*mat)[((rank - 1) * p_rows) + p_rows - 1][0], rank - 1);
-
-            MPI_Recv((*mat)[((rank - 1) * p_rows) + p_rows - 1], n, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, &status);
-            printf("done\n");
-        }
-        if (rank > 0)
-        {
-            if (rank == 1)
-            {
-                printf("R%d send (%d,n) and those are:\n", rank, (rank * p_rows) + p_rows - 1);
-                for (int j = 0; j < N; j++)
-                {
-                    printf("%.2lf\t", (*mat)[(rank * p_rows) + p_rows - 1][j]);
-                }
-                printf("\n");
-            }
-            printf("p:%d sending %.2lf to %d\n", rank, (*mat)[rank * p_rows][0], rank - 1);
-            MPI_Send((*mat)[rank * p_rows], n, MPI_DOUBLE, rank - 1, 1, MPI_COMM_WORLD);
-            printf("done\n");
-        }
-        if (rank < size - 1)
-        {
-            printf("p:%d receiving %.2lf from %d\n", rank, (*mat)[((rank + 1) * p_rows)][0], rank + 1);
             MPI_Recv((*mat)[((rank + 1) * p_rows)], n, MPI_DOUBLE, rank + 1, 1, MPI_COMM_WORLD, &status);
-            printf("done\n");
         }
 
         MPI_Reduce(&diff, &reduced_diff, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0)
         {
-            diff += reduced_diff;
-            if (diff / n / n < TOL)
+            // diff += reduced_diff;
+            if (reduced_diff / n / n < TOL)
                 done = 1;
         }
-
+        MPI_Bcast(&done, 1, MPI_INT, 0, MPI_COMM_WORLD); // *x = 4, 5, 6,7,8,
         cnt_iter++;
         MPI_Barrier(MPI_COMM_WORLD);
     }
@@ -170,9 +140,30 @@ void mpi_colored_solver(double ***mat, int n, int m, int p_rows, int rank, int s
     if (rank == 0)
     {
         if (done)
+        {
             printf("Solver converged after %d iterations\n", cnt_iter);
+        }
         else
             printf("Solver not converged after %d iterations\n", cnt_iter);
+    }
+    // collect to a
+    if (done)
+    {
+        if (rank > 0)
+        {
+            for (int i = rank * p_rows; i < (rank * p_rows) + p_rows; i++)
+            {
+                MPI_Send((*mat)[i], n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+            }
+        }
+        if (rank == 0)
+        {
+            for (int i = p_rows; i < n; i++)
+            {
+                int src  = (i / p_rows) % size;
+                MPI_Recv((*mat)[i], n, MPI_DOUBLE, src, 0, MPI_COMM_WORLD, &status);
+            }
+        }
     }
 }
 
@@ -193,7 +184,16 @@ int main(int argc, char *argv[])
     int p_rows = N / size;
     if (rank == 0)
     {
-        printf("pcols: %d\n", p_rows);
+        printf("p_rows: %d\n", p_rows);
+        // printf("BEFORE: %d\n", p_rows);
+        // for (int i = 0; i < N; i++)
+        // {
+        //     for (int j = 0; j < N; j++)
+        //     {
+        //         printf("%.2lf\t", a[i][j]);
+        //     }
+        //     printf("\n");
+        // }
     }
 
     // Colored Initial operation time

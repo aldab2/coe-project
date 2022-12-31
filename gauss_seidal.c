@@ -80,9 +80,9 @@ int main(int argc, char *argv[])
     {
         for (int j = 0; j < n; j++)
         {
-            //printf("%f, ", a[i][j]);
+            printf("%f, ", a[i][j]);
         }
-        //printf("\n");
+        printf("\n");
     }
     printf("beofre\n");
     //clock_t i_exec_t = clock();

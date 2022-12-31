@@ -4,10 +4,10 @@
 #include <math.h>
 #include <omp.h>
 
-#define MAX_ITER 1000
+#define MAX_ITER 100
 #define MAX 100 // maximum value of the matrix element
-#define TOL 0.000001
-#define THREAD_COUNT 4
+#define TOL 0.001
+#define THREAD_COUNT 8
 // Generate a random double number with the maximum value of max
 double rand_double(int max)
 {
