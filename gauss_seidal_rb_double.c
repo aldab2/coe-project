@@ -7,7 +7,7 @@
 #define MAX_ITER 20
 #define MAX 100 // maximum value of the matrix element
 #define TOL 0.000001
-#define THREAD_COUNT 8
+#define THREAD_COUNT 16
 // Generate a random double number with the maximum value of max
 double rand_double(int max)
 {
@@ -91,24 +91,23 @@ int main(int argc, char *argv[])
 
     allocate_init_2Dmatrix(&a, n, n);
 
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            printf("%f, ", a[i][j]);
-        }
-        printf("\n");
-    }
+    // for (int i = 0; i < n; i++)
+    // {
+    //     for (int j = 0; j < n; j++)
+    //     {
+    //         printf("%f, ", a[i][j]);
+    //     }
+    //     printf("\n");
+    // }
     // printf("beofre\n");
     // Initial operation time
-    clock_t i_exec_t = clock();
+    double start_time = omp_get_wtime();
 
     solver(&a, n, n);
 
     // Final operation time
-    clock_t f_exec_t = clock();
-    double exec_time = (double)(f_exec_t - i_exec_t) / CLOCKS_PER_SEC;
-    printf("Operations time: %f\n", exec_time);
+    double end_time = omp_get_wtime() - start_time;
+    printf("Operations time: %.2lf\n", end_time);
 
     printf("after\n");
     for (int i = 0; i < n; i++)

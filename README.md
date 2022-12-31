@@ -2,12 +2,12 @@
 
 ```
 /opt/homebrew/opt/llvm/bin/clang -L/opt/homebrew/opt/libomp/lib -fopenmp gauss_seidal.c -o gauss_seidal
-./gauss_seidal 8 0
+./gauss_seidal 400 0
 ```
 
 ```
 /opt/homebrew/opt/llvm/bin/clang -L/opt/homebrew/opt/libomp/lib -fopenmp gauss_seidal_wave.c -o gauss_seidal_wave
-./gauss_seidal_wave 600 0
+./gauss_seidal_wave 400 0
 ```
 
 ```
