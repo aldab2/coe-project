@@ -7,7 +7,7 @@
 
 #define MAX_ITER 100
 #define MAX 100 // maximum value of the matrix element
-#define TOL 0.001
+#define TOL 0.000001
 #define N 8
 #define THREAD_COUNT 4
 // Generate a random double number with the maximum value of max
