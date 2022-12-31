@@ -5,11 +5,11 @@
 #include <math.h>
 #include <mpi.h>
 
-#define MAX_ITER 100
+#define MAX_ITER 20
 #define MAX 100 // maximum value of the matrix element
 #define TOL 0.000001
-#define N 8
-#define THREAD_COUNT 4
+#define THREAD_COUNT 16
+
 // Generate a random double number with the maximum value of max
 double rand_double(int max)
 {
@@ -173,7 +173,8 @@ int main(int argc, char *argv[])
     // colored a
     double **a;
 
-    n = N;
+    // n = N;
+    n = atoi(argv[1]);
     printf("Matrix size = %d \n", n);
     allocate_init_2Dmatrix(&a, n, n);
     int size, rank;
@@ -181,7 +182,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    int p_rows = N / size;
+    int p_rows = n / size;
     if (rank == 0)
     {
         printf("p_rows: %d\n", p_rows);
@@ -204,14 +205,14 @@ int main(int argc, char *argv[])
     if (rank == 0)
     {
         printf("Colored Results:\n");
-        for (int i = 0; i < N; i++)
-        {
-            for (int j = 0; j < N; j++)
-            {
-                printf("%.2lf\t", a[i][j]);
-            }
-            printf("\n");
-        }
+        // for (int i = 0; i < n; i++)
+        // {
+        //     for (int j = 0; j < n; j++)
+        //     {
+        //         printf("%.2lf\t", a[i][j]);
+        //     }
+        //     printf("\n");
+        // }
         // Final operation time
         clock_t colored_f_exec_t = clock();
         double colored_exec_time = (double)(colored_f_exec_t - colored_i_exec_t) / CLOCKS_PER_SEC;
